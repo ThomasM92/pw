@@ -1,0 +1,17 @@
+[package]
+name = "pw"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+argon2 = "0.5.3"
+clap = { version = "4.5.17", features = ["derive"] }
+clippers = "0.1.2"
+rpassword = "7.3.1"
+simple_crypt = "0.2.3"
+
+[profile.release]
+strip = true # remove symbols from the binary
+opt-level = "s" # Optimize for size (75) -> use "z" for (25)
+lto = true # Enable link time optimization (increase compile time)
+codegen-units = 1 # Maximize size reduction optimizations (restrict parallel processing capabilities during compile time)
