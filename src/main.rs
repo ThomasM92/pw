@@ -18,10 +18,14 @@ use std::{
 #[command(long_about, arg_required_else_help = true)]
 pub enum Cli {
     /// Hash a string with a salt and copy the output to clipboard
+    #[command(arg_required_else_help = true)]
     Hash {
         /// Print the generated hash
         #[arg(short, long)]
         show: bool,
+
+        /// The string to hash
+        string: String,
 
         /// Length of the output hash (default = 16, up to 64)
         length: Option<usize>,
@@ -68,22 +72,32 @@ fn main() -> ExitCode {
 
 fn app<'a>() -> Result<(), &'a str> {
     match Cli::parse() {
-        Cli::Hash { show, length } => {
+        Cli::Hash {
+            show,
+            string,
+            length,
+        } => {
             print!("🔑 Password: ");
             std::io::stdout()
                 .flush()
                 .map_err(|_| "Could not flush STDOUT")?;
             let password = read_password().map_err(|_| "Could not read password")?;
 
-            print!("🧂 Salt it: ");
+            // print!("🧂 Salt it: ");
+            print!("🔑 Confirm password: ");
             std::io::stdout()
                 .flush()
                 .map_err(|_| "Could not flush STDOUT")?;
-            let salt = read_password().map_err(|_| "Could not read salt")?;
+            let confirmation_password =
+                read_password().map_err(|_| "Could not read confirmation password")?;
+
+            if password != confirmation_password {
+                return Err("Wrong password");
+            }
 
             let mut hash = [0u8; 64];
             Argon2::default()
-                .hash_password_into(password.as_bytes(), salt.as_bytes(), &mut hash)
+                .hash_password_into(string.as_bytes(), password.as_bytes(), &mut hash)
                 .map_err(|_| "Hashing failed!")?;
 
             let l = length.unwrap_or(16).min(64);
